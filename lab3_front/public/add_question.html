@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Добавить вопрос</title>
+     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="/questions.png" type="image/png">
+</head>
+<body>
+    <h1>Задай вопрос</h1>
+    <nav>
+        <ul>
+            <li><a href="/">Главная</a></li>
+             <li class="current"><a href="/add_question">Добавить вопрос</a></li>
+           <li><a href="/questions">Список вопросов</a></li>
+            <li><a href="/random_question">Случайный вопрос</a></li>
+            <li><a href="/contacts">Контакты</a></li>
+             <li><a href="/api-docs">Документация API</a></li>
+        </ul>
+    </nav>
+    <div class="content-wrapper">
+        <h1>Добавить новый вопрос</h1>
+        <p id="error-message" style="color: red;"></p>
+         <form  id="add-question-form">
+            <label for="question">Вопрос:</label>
+            <input type="text" id="question" name="question" required>
+            <button type="submit">Добавить</button>
+       </form>
+   </div>
+<script>
+    const addQuestionForm = document.getElementById('add-question-form');
+   const errorMessage = document.getElementById('error-message');
+     addQuestionForm.addEventListener('submit', function(e){
+        errorMessage.innerText = '';
+        const questionText = document.getElementById('question').value;
+       fetch('http://localhost:8080/questions', {
+               method: 'POST',
+                 headers: {
+                       'Content-Type': 'application/json'
+                   },
+               body: questionText
+            })
+            .then(response => {
+                 if (response.ok) {
+                       window.location.href = '/add_question';
+                 } else if (response.status === 400){
+                      errorMessage.innerText = "Введено максимальное количество вопросов";
+                 }
+                   else {
+                          return response.text().then(error => {
+                           errorMessage.innerText = 'Произошла ошибка при добавлении вопроса';
+                         })
+                   }
+               })
+            .catch(error => {
+                    errorMessage.innerText = 'Произошла ошибка при добавлении вопроса';
+                     console.error('Error adding question:', error)
+                });
+          e.preventDefault();
+       })
+ </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+version: "3.8"
+services:
+  backend:
+    build:
+      context: ./lab3_server
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    depends_on:
+      - database
+    restart: always
+  frontend:
+    build:
+      context: ./lab3_front
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+    restart: always
+    depends_on:
+      - backend
+  database:
+    image: postgres:13
+    ports:
+      - "5433:5433"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1337
+      POSTGRES_DB: postgres
+    networks:
+      - app-network
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    restart: always
+networks:
+  app-network:
+    driver: bridge
+volumes:
+  db_data:

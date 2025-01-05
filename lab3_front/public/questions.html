@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Список вопросов</title>
+     <link rel="stylesheet" href="css/style.css">
+     <link rel="icon" href="/questions.png" type="image/png">
+</head>
+ <body>
+     <h1>Задай вопрос</h1>
+      <nav>
+         <ul>
+             <li><a href="/">Главная</a></li>
+             <li><a href="/add_question">Добавить вопрос</a></li>
+             <li class="current"><a href="/questions">Список вопросов</a></li>
+             <li><a href="/random_question">Ответить на вопрос</a></li>
+             <li><a href="/contacts">Контакты</a></li>
+             <li><a href="/api-docs">Документация API</a></li>
+         </ul>
+     </nav>
+     <div class="content-wrapper">
+         <h1>Список вопросов</h1>
+          <table id="questions-table">
+             <thead>
+                <tr>
+                     <th>№</th>
+                     <th>ID</th>
+                     <th>Вопрос</th>
+                     <th>Действия</th>
+                 </tr>
+             </thead>
+             <tbody id="questions-body">
+             </tbody>
+         </table>
+     </div>
+    <script>
+          const questionsBody = document.getElementById('questions-body');
+          function fetchQuestions() {
+            fetch('http://localhost:8080/questions')
+                 .then(response => response.json())
+                .then(data => {
+                      questionsBody.innerHTML = '';
+                     if (data.length === 0) {
+                         const row = document.createElement('tr');
+                          row.innerHTML = `<td colspan="3">Нет вопросов.</td>`;
+                           questionsBody.appendChild(row);
+                      } else {
+                         data.forEach((question, index) => {
+                              const row = document.createElement('tr');
+                            row.innerHTML = `
+                                 <td>${index + 1}</td>
+                                 <td>${question.id}</td>
+                                 <td>
+                                     <form class="update-form" data-id="${question.id}"  style="display:flex; align-items: center;">
+                                         <input type="text" name="question" value="${question.text}" required style="margin: 0; flex-grow: 1;">
+                                         <button type="submit" style="margin-left: 10px;">Изменить</button>
+                                     </form>
+                                </td>
+                                 <td>
+                                     <form class="delete-form"  data-id="${question.id}"  style="display:inline;">
+                                         <button type="submit" >Удалить</button>
+                                     </form>
+                                 </td>
+                            `;
+                             questionsBody.appendChild(row);
+                         });
+                     }
+                     addFormListeners();
+                 })
+                 .catch(error => console.error('Error fetching questions:', error));
+        }
+        function addFormListeners() {
+            const updateForms = document.querySelectorAll('.update-form');
+            updateForms.forEach(form => {
+               form.addEventListener('submit', function(e) {
+                  e.preventDefault();
+                  const questionId = this.getAttribute('data-id');
+                   const questionText = this.querySelector('input[name="question"]').value;
+                 fetch(`http://localhost:8080/questions/${questionId}`, {
+                     method: 'PUT',
+                       headers: {
+                            'Content-Type': 'application/json'
+                        },
+                       body: questionText
+                 })
+                  .then(response => {
+                        if (!response.ok) {
+                            console.error('Failed to update question');
+                        }
+                     })
+                   .finally(() => {
+                         fetchQuestions();
+                      })
+                     .catch(error => console.error('Error updating question:', error));
+               });
+            });
+            const deleteForms = document.querySelectorAll('.delete-form');
+           deleteForms.forEach(form => {
+                 form.addEventListener('submit', function(e) {
+                  e.preventDefault();
+                 const questionId = this.getAttribute('data-id');
+                      fetch(`http://localhost:8080/questions/${questionId}`, {
+                          method: 'DELETE',
+                       })
+                        .then(response => {
+                            if (!response.ok) {
+                               console.error('Failed to delete question');
+                          }
+                      })
+                        .finally(() => {
+                            fetchQuestions();
+                        })
+                        .catch(error => console.error('Error deleting question:', error));
+                 });
+           });
+         }
+          fetchQuestions();
+       </script>
+  </body>
+ </html>

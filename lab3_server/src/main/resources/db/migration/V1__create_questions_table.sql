@@ -1,0 +1,4 @@
+CREATE TABLE questions (
+    id BIGSERIAL PRIMARY KEY,
+    text TEXT NOT NULL
+);
